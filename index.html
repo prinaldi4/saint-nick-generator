@@ -521,16 +521,6 @@ const moderationList = {
                     'wanker', 'wankjob', 'wanky', 'wazoo', 'wedgie', 'weed', 'weenie', 'weewee', 'weiner', 'weirdo', 'wench', 'wet dream', 'wetback', 'wh0re', 'wh0reface', 'white power', 'whitey', 'whiz', 'whoar', 'whoralicious', 'whore', 'whorealicious', 'whorebag', 'whored', 'whoreface', 'whorehopper', 
                     'whorehouse', 'whores', 'whoring', 'wigger', 'willies', 'willy', 'window licker', 'wiseass', 'wiseasses', 'wog', 'womb', 'woody', 'wop', 'wrapping men', 'wrinkled starfish', 'wtf', 'x-rated', 'xrated', 'xx', 'xxx', 'yaoi', 'yeasty', 'yellow showers', 'yid', 'yiffy', 'yobbo', 'zoophile', 'zoophilia', 'zubb'
 
-
-             
-
-
-
-
-
-
-
-    
     ],
     // Add positive replacement words
     wordReplacements: {
@@ -714,27 +704,59 @@ async function generateGift() {
     wishText = sanitizeText(wishText);
     
     // Create the Christmas prompt with the sanitized text
-    const christmasPrompt = `${wishText}, with Christmas tree, magical Christmas atmosphere, festive lighting, snow, cinematic lighting, high quality, detailed`;
+const christmasPrompt = `${wishText}, with Christmas tree, magical Christmas atmosphere, festive lighting, snow, cinematic lighting, high quality, detailed`;
 
-    // Generate the gift image
-    result.innerHTML = `
+// Generate the gift image
+result.innerHTML = `
     <div id="imageContainer">
         <div class="loader" id="loader" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000;">
             <img src="img/Elf_LoadingAnimation.gif" alt="Loading..." style="width: 100%; height: auto;">
             <div id="timeoutMessage" style="position: absolute; width: 100%; text-align: center; top: 100%; margin-top: 1px;"></div>
         </div>
-        <img 
-            class="gift-image"
-            alt="AI generated image of: ${wishText}"
-            src="https://image.pollinations.ai/prompt/${encodeURIComponent(christmasPrompt)}?width=512&height=512&nologo=true"
-            width="500"
-            height="500"
-        >
     </div>
     <div id="enjoyMessage" style="display: none; margin-top: 10px;">
         <p style="margin-bottom: 30px;"><span style="color: #cc0000;">Merry Christmas ${signature}!<br>We hope you enjoy your gift:</span><br><strong>${wishText}</strong></p>
     </div>
 `;
+
+// Call Bria API to generate image
+fetch('https://engine.prod.bria-api.com/text-to-image/fast/2.3', {
+    method: 'POST',
+    headers: {
+        'api_token': '51abef2fd0d948aea88eeaab15081768',
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        prompt: christmasPrompt,
+        num_results: 1,
+        sync: true
+    })
+})
+.then(response => response.json())
+.then(data => {
+    const imageContainer = document.getElementById('imageContainer');
+    const loader = document.getElementById('loader');
+    
+    // Create and add the generated image
+    const img = new Image();
+    img.className = 'gift-image';
+    img.alt = `AI generated image of: ${wishText}`;
+    img.width = 500;
+    img.height = 500;
+    img.src = data.images[0]; // Assuming Bria returns the image URL in this format
+    
+    // Remove loader and show image
+    loader.style.display = 'none';
+    imageContainer.appendChild(img);
+    
+    // Show enjoy message
+    document.getElementById('enjoyMessage').style.display = 'block';
+})
+.catch(error => {
+    console.error('Error generating image:', error);
+    const timeoutMessage = document.getElementById('timeoutMessage');
+    timeoutMessage.innerHTML = 'Sorry, there was an error generating your gift. Please try again.';
+});
 
 const timeoutWarning = setTimeout(() => {
     const timeoutMessage = document.getElementById('timeoutMessage');
@@ -788,6 +810,7 @@ img.onload = function() {
         });
     }, 100);
 }
+
 </script>
 
 </body>
