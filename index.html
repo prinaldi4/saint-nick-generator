@@ -666,7 +666,7 @@ async function generateGift() {
 
     try {
         // Make API request with correct endpoint
-        const response = await fetch('https://api.bria.ai/v1/text-to-image/base/2.3', {
+        const response = await fetch('https://engine.prod.bria-api.com/v1/text-to-image/base/2.3', {
             method: 'POST',
             headers: {
                 'api_token': '51abef2fd0d948aea88eeaab15081768',
@@ -699,15 +699,9 @@ async function generateGift() {
 
     } catch (error) {
         console.error('Error:', error);
-        img.onerror();
-    }
-}
-
-    // Handle image error
-    img.onerror = () => {
         document.getElementById('loader').style.display = 'none';
         result.innerHTML = '<p style="color: #cc0000;">Oops! The elves had trouble creating your gift. Please try again!</p>';
-    };
+    }
 
     // Scroll to the image container
     setTimeout(() => {
@@ -717,6 +711,7 @@ async function generateGift() {
             block: 'center'
         });
     }, 100);
+}
 
 
 </script>
