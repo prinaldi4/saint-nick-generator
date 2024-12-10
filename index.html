@@ -665,8 +665,8 @@ async function generateGift() {
     };
 
     try {
-        // Make API request with correct endpoint
-        const response = await fetch('https://engine.prod.bria-api.com/v1/text-to-image/base/2.3', {
+        // Make API request with modified endpoint and parameters
+        const response = await fetch('https://engine.prod.bria-api.com/v1/text-to-image/fast/2.3', {
             method: 'POST',
             headers: {
                 'api_token': '51abef2fd0d948aea88eeaab15081768',
@@ -675,11 +675,9 @@ async function generateGift() {
             body: JSON.stringify({
                 prompt: christmasPrompt,
                 num_results: 1,
-                aspect_ratio: "1:1",
-                sync: true,
-                steps_num: 30,
-                text_guidance_scale: 7,
-                medium: "photography"
+                width: 512,
+                height: 512,
+                sync: true
             })
         });
 
@@ -688,25 +686,31 @@ async function generateGift() {
         }
 
         const data = await response.json();
-        console.log('Raw API Response:', data); // Debug log to see what we're getting
-        console.log('Data structure:', Object.keys(data)); // Log the structure
+        console.log('Raw API Response:', data); // Debug log
 
-        // Check if we have any data at all
+        // Check the response structure
         if (!data) {
             throw new Error('No data received from API');
         }
 
-        // Check for image data in different possible locations
-        const imageUrl = data.images?.[0] || data.image || data.url || data.data?.[0];
-        
+        // Try to find the image URL in the response
+        let imageUrl;
+        if (data.output && data.output.length > 0) {
+            imageUrl = data.output[0];
+        } else if (data.images && data.images.length > 0) {
+            imageUrl = data.images[0];
+        } else if (data.result) {
+            imageUrl = data.result;
+        }
+
         if (!imageUrl) {
             throw new Error('No image URL found in API response');
         }
 
-        // Set the image source after successful API call
+        // Set the image source
         img.src = imageUrl;
 
-        // Only try to scroll after confirming the image container exists
+        // Scroll handling
         const imageContainer = document.getElementById('imageContainer');
         if (imageContainer) {
             setTimeout(() => {
@@ -714,7 +718,7 @@ async function generateGift() {
                     behavior: 'smooth', 
                     block: 'center'
                 });
-            }, 100);
+            }, 500); // Increased timeout to ensure content is loaded
         }
 
     } catch (error) {
