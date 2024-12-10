@@ -640,6 +640,7 @@ async function generateGift() {
                 alt="AI generated image of: ${wishText}"
                 width="500"
                 height="500"
+                style="display: none;"
             >
         </div>
         <div id="enjoyMessage" style="display: none; margin-top: 10px;">
@@ -648,20 +649,19 @@ async function generateGift() {
     `;
 
     const img = result.querySelector('.gift-image');
+    const loader = document.getElementById('loader');
     
     // Set up the original image handlers
     img.onload = function() {
-        playSoundEffect('success-sound');
-        clearTimeout(timeoutWarning);
-        clearTimeout(timeout);
-        document.getElementById('loader').style.display = 'none';
+        if (typeof playSoundEffect === 'function') {
+            playSoundEffect('success-sound');
+        }
+        loader.style.display = 'none';
+        img.style.display = 'block';
         document.getElementById('enjoyMessage').style.display = 'block';
-        createSparkles(document.getElementById('imageContainer'));
-    };
-
-    img.onerror = () => {
-        document.getElementById('loader').style.display = 'none';
-        result.innerHTML = '<p style="color: #cc0000;">Oops! The elves had trouble creating your gift. Please try again!</p>';
+        if (typeof createSparkles === 'function') {
+            createSparkles(document.getElementById('imageContainer'));
+        }
     };
 
     try {
@@ -688,29 +688,40 @@ async function generateGift() {
         }
 
         const data = await response.json();
-        console.log('API Response:', data); // Debug log
+        console.log('Raw API Response:', data); // Debug log to see what we're getting
+        console.log('Data structure:', Object.keys(data)); // Log the structure
 
-        if (!data || !data.images || !data.images[0]) {
-            throw new Error('No image data received from API');
+        // Check if we have any data at all
+        if (!data) {
+            throw new Error('No data received from API');
+        }
+
+        // Check for image data in different possible locations
+        const imageUrl = data.images?.[0] || data.image || data.url || data.data?.[0];
+        
+        if (!imageUrl) {
+            throw new Error('No image URL found in API response');
         }
 
         // Set the image source after successful API call
-        img.src = data.images[0];
+        img.src = imageUrl;
+
+        // Only try to scroll after confirming the image container exists
+        const imageContainer = document.getElementById('imageContainer');
+        if (imageContainer) {
+            setTimeout(() => {
+                imageContainer.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center'
+                });
+            }, 100);
+        }
 
     } catch (error) {
         console.error('Error:', error);
-        document.getElementById('loader').style.display = 'none';
+        loader.style.display = 'none';
         result.innerHTML = '<p style="color: #cc0000;">Oops! The elves had trouble creating your gift. Please try again!</p>';
     }
-
-    // Scroll to the image container
-    setTimeout(() => {
-        const imageContainer = document.getElementById('imageContainer');
-        imageContainer.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center'
-        });
-    }, 100);
 }
 
 
